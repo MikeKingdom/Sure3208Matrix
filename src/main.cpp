@@ -12,9 +12,14 @@
 #include <ArduinoJson.h>
 #include <config.h>
 
-#define CS1 16
-#define WR 18
-#define DATA 17
+#define DATA 16
+#define WR 17
+#define CS1 18
+#define CS2 19
+#define CS3 21
+#define CS4 22
+
+#define NUM_DISPLAYS 4
 
 // Debug and Test options
 #define _DEBUG_
@@ -54,7 +59,7 @@ void setup()
   Serial.begin(115200);
   while (!Serial)
     ; // wait for serial attach
-  HT1632.begin(CS1, WR, DATA);
+  HT1632.begin(CS1, CS2, CS3, CS4, WR, DATA);
 
   textWidth = HT1632.getTextWidth(text, FONT_8X5_END, FONT_8X5_HEIGHT);
 
@@ -196,9 +201,11 @@ void handleScrollAPI()
 
 void scroll()
 {
-  HT1632.clear();
-  HT1632.drawText(text, OUT_SIZE-textX, 0, FONT_8X5, FONT_8X5_END, FONT_8X5_HEIGHT);
-  HT1632.render();
-
-  textX = (textX + 1) % (textWidth + OUT_SIZE);
+  for (int i = 0; i < NUM_DISPLAYS; i++) {
+    HT1632.renderTarget(i);
+    HT1632.clear();
+    HT1632.drawText(text, OUT_SIZE * (NUM_DISPLAYS - i) - textX, 0, FONT_8X5, FONT_8X5_END, FONT_8X5_HEIGHT);
+    HT1632.render();
+  }
+  textX = (textX + 1) % (textWidth + OUT_SIZE * NUM_DISPLAYS);
 }
